@@ -1,0 +1,81 @@
+[
+  {
+    "name": "Clang 16.0.6 x86_64-w64-windows-gnu",
+    "compilers": {
+      "C": "C:\\Aplikacje\\mingw64\\bin\\clang.exe",
+      "CXX": "C:\\Aplikacje\\mingw64\\bin\\clang++.exe"
+    },
+    "environmentVariables": {
+      "CMT_MINGW_PATH": "C:\\Aplikacje\\mingw64\\bin"
+    },
+    "generator": "Ninja"
+  },
+  {
+    "name": "GCC 13.1.0 i686-w64-mingw32",
+    "compilers": {
+      "C": "C:\\Aplikacje\\mingw32v13.1\\bin\\gcc.exe",
+      "CXX": "C:\\Aplikacje\\mingw32v13.1\\bin\\g++.exe"
+    },
+    "environmentVariables": {
+      "CMT_MINGW_PATH": "C:\\Aplikacje\\mingw32v13.1\\bin"
+    },
+    "generator": "Ninja"
+  },
+  {
+    "name": "GCC 13.2.0 x86_64-w64-mingw32",
+    "compilers": {
+      "C": "C:\\Aplikacje\\mingw64v13.2\\bin\\gcc.exe",
+      "CXX": "C:\\Aplikacje\\mingw64v13.2\\bin\\g++.exe"
+    },
+    "environmentVariables": {
+      "CMT_MINGW_PATH": "C:\\Aplikacje\\mingw64v13.2\\bin"
+    },
+    "generator": "Ninja"
+  },
+  {
+    "name": "GCC 14.1.0 x86_64-w64-mingw32",
+    "compilers": {
+      "C": "C:\\Aplikacje\\mingw64v14.1\\bin\\gcc.exe",
+      "CXX": "C:\\Aplikacje\\mingw64v14.1\\bin\\g++.exe"
+    },
+    "environmentVariables": {
+      "CMT_MINGW_PATH": "C:\\Aplikacje\\mingw64v14.1\\bin"
+    },
+    "generator": "Ninja"
+  },
+  {
+    "name": "GCC 15.2.0 x86_64-w64-mingw32",
+    "compilers": {
+      "C": "C:\\Aplikacje\\mingw64\\bin\\gcc.exe",
+      "CXX": "C:\\Aplikacje\\mingw64\\bin\\g++.exe"
+    },
+    "environmentVariables": {
+      "CMT_MINGW_PATH": "C:\\Aplikacje\\mingw64\\bin"
+    },
+    "generator": "Ninja"
+  },
+  {
+    "name": "Visual Studio Enterprise 2022 Release - amd64",
+    "visualStudio": "17276f48",
+    "visualStudioArchitecture": "x64",
+    "generator":"Visual Studio 17 2022"
+  },
+  {
+    "name": "Visual Studio Enterprise 2022 Release - amd64_x86",
+    "visualStudio": "17276f48",
+    "visualStudioArchitecture": "x64",
+    "generator": "Visual Studio 17 2022"
+  },
+  {
+    "name": "Visual Studio Enterprise 2022 Release - x86",
+    "visualStudio": "17276f48",
+    "visualStudioArchitecture": "x86",
+    "generator": "Visual Studio 17 2022"
+  },
+  {
+    "name": "Visual Studio Enterprise 2022 Release - x86_amd64",
+    "visualStudio": "17276f48",
+    "visualStudioArchitecture": "x86",
+    "generator": "Visual Studio 17 2022"
+  }
+]
