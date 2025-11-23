@@ -18,7 +18,10 @@ function _G.init()
             return "build"
         end, -- this is used to specify generate directory for cmake, allows macro expansion, can be a string or a function returning the string, relative to cwd.
         cmake_run_target_args = {
-            working_directory = vim.fn.getcwd()  -- Uses the current Neovim directory
+            working_directory = 
+                function()
+                    return vim.fn.getcwd()  -- or more advanced logic
+                  end,
         },
         cmake_soft_link_compile_commands = true, -- this will automatically make a soft link from compile commands file to project root dir
         cmake_compile_commands_from_lsp = false, -- this will automatically set compile commands file location using lsp, to use it, please set `cmake_soft_link_compile_commands` to false
@@ -143,21 +146,15 @@ end
 _G.init()
 
 vim.api.nvim_create_autocmd("DirChanged", {
-  pattern = "*",
   callback = function()
-       _G.init()
-       print(vim.v.event.cwd)
-  end,
+    local cwd = vim.fn.getcwd()
+    _G.init()
+    vim.cmd("silent! CMakeSelectCwd " .. cwd)
+    vim.cmd("silent! CMakeSelectBuildDir " .. cwd .. "/build")
+  end
 })
 
 local cmake_kits_path = vim.fn.stdpath("config") .. "/" .. "after/plugin/cmake-tools-kits.json"
 local osys = require("cmake-tools.osys")
 local cmake = require("cmake-tools")
 local map = vim.keymap.set
-map("n", "<S-F5>", ":CMakeBuild<CR>", { desc = "CMake Build" })
-map("n", "<C-F5>", ":CMakeDebug<CR>", { desc = "CMake Debug" })
-map("n", "<F5>", ":CMakeRun<CR>", { desc = "CMake Run" })
-
-map("n", "<F2>", cmake.select_build_type, { desc = "Select Build Type" })
-map("n", "<F3>", cmake.select_launch_target, { desc = "Select Launch Target" })
-map("n", "<F4>", cmake.select_kit, { desc = "Select Build Target" })
