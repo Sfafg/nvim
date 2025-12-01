@@ -20,6 +20,7 @@ require("conform").setup({
 		tex = { "latexindent" },
 		js = { "prettier" },
         javascript = { "prettier" },
+        ts = { "prettier" },
         typescript = { "prettier" },
         javascriptreact = { "prettier" },
         typescriptreact = { "prettier" },
@@ -33,7 +34,7 @@ require("conform").setup({
 })
 
 vim.api.nvim_create_autocmd("BufWritePre", {
-	pattern = {"*.vert","*.frag","*.comp","*.nvim", "*.ini","*.tex","*.py", "*.cs","*.c", "*.cpp", "*.h", "*.hpp", "*.js"}, -- Apply only to C/C++ files
+	pattern = {"*.vert","*.frag","*.comp","*.nvim", "*.ini","*.tex","*.py", "*.tsx", "*.cs","*.c", "*.cpp", "*.h", "*.hpp", "*.js"}, -- Apply only to C/C++ files
 	callback = function(args)
 		require("conform").format({ bufnr = args.buf })
 	end,

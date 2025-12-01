@@ -27,3 +27,6 @@ vim.opt.colorcolumn = "1000"
 vim.g.mapleader = " "
 -- vim.o.hidden = false
 vim.cmd("colorscheme palenight")
+
+vim.g.dotnet_errors_only = true
+vim.g.dotnet_show_project_file= false

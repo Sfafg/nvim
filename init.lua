@@ -28,7 +28,22 @@ require("lazy").setup({
 
     { "ellisonleao/gruvbox.nvim", name = "gruvbox" },
 
-    { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+    {
+     "nvim-treesitter/nvim-treesitter",
+      build = ":TSUpdate",
+      event = { "BufReadPost", "BufNewFile" },
+      config = function()
+        require('nvim-treesitter.configs').setup {
+          ensure_installed = { "cpp", "cmake", "c", "lua","python", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+          sync_install = false,
+          auto_install = false,
+          highlight = {
+            enable = true,
+            additional_vim_regex_highlighting = false,
+          },
+        }
+      end},
+
     "ThePrimeagen/harpoon",
     "mbbill/undotree",
     "tpope/vim-fugitive",
@@ -93,6 +108,20 @@ require("lazy").setup({
     "folke/zen-mode.nvim",
     "vim-scripts/DoxygenToolkit.vim",
     "github/copilot.vim",
+    {
+  "windwp/nvim-ts-autotag",
+  dependencies = { "nvim-treesitter/nvim-treesitter" },
+  ft = { "javascriptreact", "typescriptreact", "javascript", "typescript", "jsx", "tsx" },
+  opts = {
+    filetypes = {
+      "html", "javascript", "typescript", "javascriptreact", "typescriptreact", 
+      "jsx", "tsx", "svelte", "vue", "rescript", "xml", "php", "markdown"
+    },
+  },
+  config = function(_, opts)
+    require("nvim-ts-autotag").setup(opts)
+  end,
+}
 })
 
 require("custom")
