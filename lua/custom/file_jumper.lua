@@ -6,6 +6,32 @@ if vim.fn.isdirectory(jump_list_dir) == 0 then
     vim.fn.mkdir(jump_list_dir, "p")
 end
 
+local function bfs_files(root)
+  local queue = { root }
+  local out = {}
+
+  while #queue > 0 do
+    local dir = table.remove(queue, 1) -- FIFO
+
+    table.insert(out, dir)
+
+    local iter = vim.loop.fs_scandir(dir)
+    if iter then
+      while true do
+        local name, t = vim.loop.fs_scandir_next(iter)
+        if not name then break end
+
+        if t == "directory" then
+          table.insert(queue, dir .. "/" .. name)
+        end
+      end
+    end
+  end
+
+  return out
+end
+
+
 local function save_jump_list(list)
     local project_name = vim.fn.getcwd():match("^.*/(.*)$") or vim.fn.getcwd()
 	local jump_list = jump_list_dir .. project_name .. ".json"
@@ -66,9 +92,37 @@ function M.jump_to_alternative(pattern, replacement)
 
     buff_name = vim.fn.fnamemodify(buff_name, ":t")
     local file_name = buff_name:gsub(pattern,replacement)
+    print(file_name)
 
     local jump_file=""
     local files = vim.fn.glob(dir .. "/**/*", true, true)
+    for _, p in ipairs(files) do
+        if vim.fn.isdirectory(p) == 1 and vim.loop.fs_stat(p .. "/" .. file_name) then
+            jump_file=p .. "/" .. file_name
+            break
+        end
+    end
+
+    if jump_file ~= "" then
+        vim.cmd("silent! edit " .. jump_file)
+    else
+        print(file_name .. " not found")
+    end
+end
+
+function M.jump_to_alternative_function(f)
+    local dir = vim.loop.cwd()
+    local buff_name = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
+    if buff_name == "" then
+        return 
+    end
+
+    buff_name = vim.fn.fnamemodify(buff_name, ":t")
+    local file_name = f(buff_name)
+
+    local jump_file=""
+    local files = bfs_files(dir)
+
     for _, p in ipairs(files) do
         if vim.fn.isdirectory(p) == 1 and vim.loop.fs_stat(p .. "/" .. file_name) then
             jump_file=p .. "/" .. file_name

@@ -81,24 +81,6 @@ require("lazy").setup({
     { "kevinhwang91/nvim-ufo", dependencies = "kevinhwang91/promise-async" },
     "terrortylor/nvim-comment",
     "terryma/vim-multiple-cursors",
-    {
-        "jakemason/ouroboros",
-        dependencies = { "nvim-lua/plenary.nvim" },
-        ft = { "cpp", "glsl", "c" },
-        config = function()
-            require("ouroboros").setup({
-                extension_preferences_table = {
-                    vert = { frag = 1 },
-                    frag = { vert = 1 },
-                    c = { h = 2, hpp = 1 },
-                    h = { c = 2, cpp = 3 },
-                    cpp = { hpp = 2, h = 3 },
-                    hpp = { cpp = 1, c = 2 },
-                },
-                switch_to_open_pane_if_possible = true,
-            })
-        end,
-    },
     "lervag/vimtex",
     "rbong/vim-flog",
     "junegunn/vim-easy-align",

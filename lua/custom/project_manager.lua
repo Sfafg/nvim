@@ -36,6 +36,22 @@ end
 local function load_keymaps()
     local jumper = require("custom.file_jumper")
 
+    vim.keymap.set("n", "<leader>jj", function()
+        local type = get_project_type()
+        if type == "cmake" then
+            jumper.jump_to_alternative_function(function(buff_name) 
+
+            local name = vim.fn.fnamemodify(buff_name, ":r")
+            local extension = vim.fn.fnamemodify(buff_name, ":e")
+
+            if extension == "cpp" then return name .. ".h" end
+            if extension == "h" then return name .. ".cpp" end
+            if extension == "frag" then return name .. ".vert" end
+            if extension == "vert" then return name .. ".frag" end
+            end)
+        end
+    end, { desc = "Jump to Profile.cs" })
+
     vim.keymap.set("n", "<leader>jp", function()
         local type = get_project_type()
         if type == "dotnet" then
@@ -305,7 +321,7 @@ end
 local function project_build()
     local type = get_project_type()
     if type == "cmake" then
-        require("cmake-tools").build()
+        require("cmake-tools").build("*")
 
     elseif type == "latex" then
         vim.cmd("VimtexCompile")
