@@ -14,13 +14,12 @@ return {
 	config = function()
 		local luasnip = require("luasnip")
 		local cmp = require("cmp")
-		local lspkind = require("lspkind")
 
+		vim.opt.pumheight = 10
 		cmp.setup({
 			experimental = {
 				ghost_text = true,
 			},
-
 			-- view = { entries = "wildmenu" },
 
 			snippet = {

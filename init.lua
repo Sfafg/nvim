@@ -15,11 +15,11 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("custom")
+local c = require("custom")
+require("lazy").setup(require("plugins"))
+c.setup()
+
 vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost" }, {
 	pattern = "*",
 	command = "silent! wall",
 })
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, { command = "checktime" })
-require("lazy").setup(require("plugins"))
-vim.cmd("colorscheme palenight")

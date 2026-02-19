@@ -201,7 +201,7 @@ local function open_project(project)
 	local project_name = project:match("^.*/(.*)$") or project
 	local session = sessions_dir .. project_name .. ".vim"
 
-	-- vim.cmd("silent! bufdo bwipeout!")
+	vim.cmd("silent! bufdo bwipeout!")
 	vim.api.nvim_set_current_dir(project)
 	if vim.fn.filereadable(session) == 1 then
 		vim.cmd("silent! source " .. session)
@@ -302,6 +302,7 @@ local function picker()
 
 	telescope
 		.new({}, {
+			default_selection_index = 2,
 			prompt_title = "Select Project",
 			finder = require("telescope.finders").new_table({ results = filenames }),
 			sorter = require("telescope.config").values.generic_sorter({}),
@@ -447,12 +448,12 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 	end,
 })
 
--- if vim.fn.filereadable(project_file) == 1 then
--- 	local list = load_projects()
--- if list[1] ~= nil then
---     open_project(list[1])
--- end
--- end
+if vim.fn.argc() <= 0 then
+	local list = load_projects()
+	if #list > 0 then
+		open_project(list[1])
+	end
+end
 
 function M.setup() end
 return M

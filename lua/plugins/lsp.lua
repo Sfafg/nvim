@@ -16,6 +16,7 @@ return {
 				ensure_installed = { "lua_ls", "clangd", "cmake", "pylsp", "texlab", "ts_ls" },
 				automatic_installation = true,
 			})
+
 			local on_attach = function(_, _)
 				vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
 				vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
@@ -24,8 +25,9 @@ return {
 				vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references, { desc = "LSP References" })
 				vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover Documentation" })
 			end
+
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-			local servers = { "clangd", "lua_ls", "cmake", "pylsp", "texlab", "ts_ls" }
+			local servers = { "omnisharp", "clangd", "lua_ls", "cmake", "pylsp", "texlab", "ts_ls" }
 			for _, lsp in ipairs(servers) do
 				local opts = { on_attach = on_attach, capabilities = capabilities }
 				if lsp == "clangd" then
