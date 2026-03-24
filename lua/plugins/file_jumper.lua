@@ -112,6 +112,24 @@ function M.jump_to_alternative(pattern, replacement)
 	end
 end
 
+function M.jump_to_alternative_match(pattern)
+	local dir = vim.loop.cwd()
+
+	local jump_file = ""
+	local files = vim.fs.find(function(name)
+		return name:match(pattern)
+	end, { path = dir, type = "file" })
+
+	jump_file = files[1]
+
+	if jump_file and jump_file ~= "" then
+		vim.cmd("silent! edit " .. jump_file)
+		return true
+	else
+		return false
+	end
+end
+
 function M.jump_to_alternative_function(f)
 	local dir = vim.loop.cwd()
 	local buff_name = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())

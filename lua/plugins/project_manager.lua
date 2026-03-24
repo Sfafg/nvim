@@ -63,23 +63,54 @@ local function load_keymaps()
 			end)
 		end
 		if type == "conan" then
-			jumper.jump_to_alternative_function(function(buff_name)
-				local name = vim.fn.fnamemodify(buff_name, ":r")
-				local extension = vim.fn.fnamemodify(buff_name, ":e")
+			local name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t:r")
+			local ext = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":e")
+			if not ext or not name or name == "" or ext == "" then
+				return
+			end
 
-				if extension == "cpp" then
-					return "../include/" .. name .. ".h"
+			if ext == "h" or ext == "hpp" or ext == "hxx" then
+				local sources = { "c", "cpp", "cxx" }
+				local found = false
+
+				for _, e in ipairs(sources) do
+					if jumper.jump_to_alternative_match(name .. "%." .. e .. "$") then
+						found = true
+						break
+					end
 				end
-				if extension == "h" then
-					return "../src/" .. name .. ".cpp"
+
+				if not found then
+					print("file not found for " .. name .. "." .. ext)
 				end
-				if extension == "frag" then
-					return name .. ".vert"
+			end
+
+			if ext == "c" or ext == "cpp" or ext == "cxx" then
+				local sources = { "h", "hpp", "hxx" }
+				local found = false
+
+				for _, e in ipairs(sources) do
+					if jumper.jump_to_alternative_match(name .. "%." .. e .. "$") then
+						found = true
+						break
+					end
 				end
-				if extension == "vert" then
-					return name .. ".frag"
+
+				if not found then
+					print("file not found for " .. name .. "." .. ext)
 				end
-			end)
+			end
+
+			if ext == "vert" then
+				if not jumper.jump_to_alternative_match(name .. ".frag$") then
+					print("file not found for " .. name .. "." .. ext)
+				end
+			end
+			if ext == "frag" then
+				if not jumper.jump_to_alternative_match(name .. ".vert$") then
+					print("file not found for " .. name .. "." .. ext)
+				end
+			end
 		end
 	end, { desc = "Jump to Profile.cs" })
 
