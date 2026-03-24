@@ -42,7 +42,8 @@ local function load_keymaps()
 
 	vim.keymap.set("n", "<leader>jj", function()
 		local type = get_project_type()
-		if type == "cmake" or type == "conan" then
+
+		if type == "cmake" then
 			jumper.jump_to_alternative_function(function(buff_name)
 				local name = vim.fn.fnamemodify(buff_name, ":r")
 				local extension = vim.fn.fnamemodify(buff_name, ":e")
@@ -52,6 +53,25 @@ local function load_keymaps()
 				end
 				if extension == "h" then
 					return name .. ".cpp"
+				end
+				if extension == "frag" then
+					return name .. ".vert"
+				end
+				if extension == "vert" then
+					return name .. ".frag"
+				end
+			end)
+		end
+		if type == "conan" then
+			jumper.jump_to_alternative_function(function(buff_name)
+				local name = vim.fn.fnamemodify(buff_name, ":r")
+				local extension = vim.fn.fnamemodify(buff_name, ":e")
+
+				if extension == "cpp" then
+					return "../include/" .. name .. ".h"
+				end
+				if extension == "h" then
+					return "../src/" .. name .. ".cpp"
 				end
 				if extension == "frag" then
 					return name .. ".vert"
@@ -501,6 +521,7 @@ function M.setup()
 		local list = load_projects()
 		if #list > 0 then
 			open_project(list[1])
+			vim.cmd("filetype detect")
 		end
 	end
 end
