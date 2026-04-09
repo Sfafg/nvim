@@ -19,6 +19,7 @@ require("custom")
 require("lazy").setup(require("plugins"))
 require("plugins.colorscheme_picker").setup()
 require("plugins.project_manager").setup()
+require("vim._core.ui2").enable()
 
 vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost" }, {
 	pattern = "*",

@@ -283,12 +283,6 @@ local function open_project(project)
 	table.insert(list, 1, value)
 	save_projects(list)
 	load_keymaps()
-
-	local cwd = vim.fn.getcwd()
-	if get_project_type() == "cmake" then
-		require("cmake-tools").select_cwd(cwd)
-		require("cmake-tools").select_build_dir(cwd .. "/build")
-	end
 end
 
 local function create_or_add_project()
@@ -444,7 +438,7 @@ end
 local function project_build()
 	local type = get_project_type()
 	if type == "cmake" then
-		require("cmake-tools").build("*")
+		require("cmake-custom").build()
 	elseif type == "conan" then
 		vim.cmd("!conan build --settings=build_type=Debug")
 	elseif type == "latex" then
@@ -468,7 +462,7 @@ local run_job = 0
 local function project_run()
 	local type = get_project_type()
 	if type == "cmake" then
-		require("cmake-tools").run("*")
+		require("cmake-custom").run()
 	elseif type == "conan" then
 		vim.cmd("!build/Debug/generators/main/kod-craft-2")
 	elseif type == "dotnet" then
@@ -502,28 +496,28 @@ end
 local function project_debug()
 	local type = get_project_type()
 	if type == "cmake" then
-		require("cmake-tools").debug("*")
+		require("cmake-custom").debug()
 	end
 end
 
 local function project_f2()
 	local type = get_project_type()
 	if type == "cmake" then
-		require("cmake-tools").select_build_type()
+		require("cmake-custom").select_build_type()
 	end
 end
 
 local function project_f3()
 	local type = get_project_type()
 	if type == "cmake" then
-		require("cmake-tools").select_launch_target()
+		require("cmake-custom").select_launch_target()
 	end
 end
 
 local function project_f4()
 	local type = get_project_type()
 	if type == "cmake" then
-		require("cmake-tools").select_buid_target()
+		require("cmake-custom").select_buid_target()
 	end
 end
 
