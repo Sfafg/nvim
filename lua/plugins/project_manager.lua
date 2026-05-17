@@ -7,7 +7,7 @@ if vim.fn.isdirectory(sessions_dir) == 0 then
 	vim.fn.mkdir(sessions_dir, "p")
 end
 
-local function get_project_type()
+function M.get_project_type()
 	local dir = vim.fn.getcwd()
 
 	if vim.fn.filereadable(dir .. "/conanfile.py") == 1 then
@@ -41,7 +41,7 @@ local function load_keymaps()
 	local jumper = require("plugins.file_jumper")
 
 	vim.keymap.set("n", "<leader>jj", function()
-		local type = get_project_type()
+		local type = M.get_project_type()
 
 		if type == "cmake" then
 			jumper.jump_to_alternative_function(function(buff_name)
@@ -115,28 +115,28 @@ local function load_keymaps()
 	end, { desc = "Jump to Profile.cs" })
 
 	vim.keymap.set("n", "<leader>jp", function()
-		local type = get_project_type()
+		local type = M.get_project_type()
 		if type == "dotnet" then
 			jumper.jump_to_alternative("^([a-zA-Z][a-z]*).*", "%1Profile.cs")
 		end
 	end, { desc = "Jump to Profile.cs" })
 
 	vim.keymap.set("n", "<leader>jm", function()
-		local type = get_project_type()
+		local type = M.get_project_type()
 		if type == "dotnet" then
 			jumper.jump_to_alternative("^([a-zA-Z][a-z]*).*", "%1.cs")
 		end
 	end, { desc = "Jump to Model.cs" })
 
 	vim.keymap.set("n", "<leader>jc", function()
-		local type = get_project_type()
+		local type = M.get_project_type()
 		if type == "dotnet" then
 			jumper.jump_to_alternative("^([a-zA-Z][a-z]*).*", "%1Controller.cs")
 		end
 	end, { desc = "Jump to Controller.cs" })
 
 	vim.keymap.set("n", "<leader>jd", function()
-		local type = get_project_type()
+		local type = M.get_project_type()
 		if type == "dotnet" or true then
 			-- Find profile file.
 			local dir = vim.loop.cwd()
@@ -436,9 +436,9 @@ local function picker()
 end
 
 local function project_build()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		require("cmake-custom").build()
+		require("plugins.cmake-custom").build()
 	elseif type == "conan" then
 		vim.cmd("!conan build --settings=build_type=Debug")
 	elseif type == "latex" then
@@ -460,9 +460,9 @@ end
 
 local run_job = 0
 local function project_run()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		require("cmake-custom").run()
+		require("plugins.cmake-custom").run()
 	elseif type == "conan" then
 		vim.cmd("!build/Debug/generators/main/kod-craft-2")
 	elseif type == "dotnet" then
@@ -483,9 +483,9 @@ local function project_run()
 end
 
 local function project_build_and_run()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		project_run()
+		require("plugins.cmake-custom").build_and_run()
 	else
 		if project_build() then
 			project_run()
@@ -494,30 +494,30 @@ local function project_build_and_run()
 end
 
 local function project_debug()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		require("cmake-custom").debug()
+		require("plugins.cmake-custom").debug()
 	end
 end
 
 local function project_f2()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		require("cmake-custom").select_build_type()
+		require("plugins.cmake-custom").select_build_type()
 	end
 end
 
 local function project_f3()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		require("cmake-custom").select_launch_target()
+		require("plugins.cmake-custom").select_launch_target()
 	end
 end
 
 local function project_f4()
-	local type = get_project_type()
+	local type = M.get_project_type()
 	if type == "cmake" then
-		require("cmake-custom").select_buid_target()
+		require("plugins.cmake-custom").select_build_target()
 	end
 end
 
