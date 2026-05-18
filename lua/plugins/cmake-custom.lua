@@ -1,6 +1,4 @@
 local M = {}
--- TODO: Debugging
--- ERROR: Problems with parsing launch targets
 
 local status_buffer
 local status_window
@@ -10,6 +8,7 @@ local forced_quit
 local output_buffer
 local output_window
 local settings = { buildType = "Debug", buildTarget = "all", launchTarget = "" }
+local configuredSettings = { buildType = "", buildTarget = "", launchTarget = "" }
 
 local cmake_settings_dir = vim.fn.stdpath("data") .. "/project_settings/"
 
@@ -257,8 +256,22 @@ local function get_build_targets()
 	return targets_
 end
 
-function M.conigure(f)
+function M.conigure(f, force)
 	load_settings()
+
+	force = force or false
+	if not force then
+		local same = configuredSettings.buildType == settings.buildType
+			and configuredSettings.buildTarget == settings.buildTarget
+
+		if same then
+			if f then
+				f(0)
+			end
+			return
+		end
+	end
+
 	open_status()
 	set_status_contents("CMake Config")
 
@@ -273,7 +286,15 @@ function M.conigure(f)
 		"-DCMAKE_BUILD_TYPE=" .. settings["buildType"],
 		"-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
 		"-DFETCHCONTENT_BASE_DIR=./build/_deps",
-	}, f)
+	}, function(code)
+		if code == 0 then
+			configuredSettings.buildType = settings.buildType
+			configuredSettings.buildTarget = settings.buildTarget
+		end
+		if f then
+			f(code)
+		end
+	end)
 end
 
 function M.select_build_target()
@@ -377,10 +398,9 @@ function M.build(f)
 						"./compile_commands.json"
 					)
 
+					close_status(1000)
 					if f then
 						f(code == 0)
-					else
-						close_status(1000)
 					end
 				end)
 			end,
@@ -399,17 +419,16 @@ end
 
 function M.run()
 	load_settings()
-	print(settings["launchTarget"])
 	if settings["launchTarget"] == "" then
 		M.select_launch_target()
 	end
 
-	open_status()
+	-- open_status()
 
 	if output_buffer and vim.api.nvim_buf_is_valid(output_buffer) then
 		vim.api.nvim_buf_set_lines(output_buffer, 0, -1, false, {})
 	end
-	set_status_contents("Running")
+	-- set_status_contents("Running")
 
 	local handle
 	local stdout = vim.loop.new_pipe(false)
@@ -509,8 +528,8 @@ function M.debug()
 
 	dapui.setup()
 
-	local cwd = vim.fn.getcwd()
-	local executable = cwd .. "/build/" .. settings.buildType .. "/" .. settings.launchTarget
+	local cwd = vim.fn.getcwd() .. "/build/" .. settings.buildType .. "/"
+	local executable = cwd .. settings.launchTarget
 
 	dap.listeners.after.event_initialized["cmake_dap"] = function()
 		vim.schedule(function()
@@ -553,6 +572,15 @@ function M.debug()
 		dap.run(config)
 	end)
 end
+
+vim.api.nvim_create_autocmd("BufWritePost", {
+	pattern = "CMakeLists.txt",
+	callback = function()
+		M.conigure(function()
+			close_status(1000)
+		end, true)
+	end,
+})
 
 -- vim.keymap.set("n", "<F7>", M.build_and_run, { desc = "Build CMake" })
 -- vim.keymap.set("n", "<F8>", M.select_build_target, { desc = "Get CMake Build Targets" })
