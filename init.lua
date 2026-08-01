@@ -25,3 +25,6 @@ vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost" }, {
 	pattern = "*",
 	command = "silent! wall",
 })
+
+vim.cmd([[highlight StatusLine guibg=NONE]])
+vim.cmd([[highlight StatusLineNC guibg=NONE]])

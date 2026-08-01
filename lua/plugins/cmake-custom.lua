@@ -7,13 +7,25 @@ local current_job
 local forced_quit
 local output_buffer
 local output_window
-local settings = { buildType = "Debug", buildTarget = "all", launchTarget = "" }
-local configuredSettings = { buildType = "", buildTarget = "", launchTarget = "" }
+local settings = { show_output = true, buildType = "Debug", buildTarget = "all", launchTarget = "" }
+local configuredSettings = { show_output = true, buildType = "", buildTarget = "", launchTarget = "" }
 
 local cmake_settings_dir = vim.fn.stdpath("data") .. "/project_settings/"
 
 if vim.fn.isdirectory(cmake_settings_dir) == 0 then
 	vim.fn.mkdir(cmake_settings_dir, "p")
+end
+
+output_buffer = vim.fn.bufnr("Program Output")
+if output_buffer ~= -1 then
+	local windows = vim.tbl_filter(function(win)
+		return vim.api.nvim_win_get_buf(win) == output_buffer
+	end, vim.api.nvim_list_wins())
+	if #windows > 0 then
+		output_window = windows[1]
+		vim.api.nvim_win_close(output_window, true)
+		vim.api.nvim_buf_delete(output_buffer, { force = true })
+	end
 end
 
 local function save_settings()
@@ -82,48 +94,33 @@ local function open_status()
 	vim.api.nvim_buf_set_option(status_buffer, "modifiable", false)
 end
 
-local function open_output()
+local function open_output(command, on_exit, on_out)
 	output_buffer = vim.fn.bufnr("Program Output")
+	if output_buffer ~= -1 then
+		vim.api.nvim_buf_set_name(output_buffer, "Program Last Output")
+	end
+
 	local prev = vim.fn.win_getid()
-	if output_buffer ~= -1 then
-		local windows = vim.tbl_filter(function(win)
-			return vim.api.nvim_win_get_buf(win) == output_buffer
-		end, vim.api.nvim_list_wins())
-		if #windows > 0 then
-			output_window = windows[1]
-		end
-
-		if not output_window or not vim.api.nvim_win_is_valid(output_window) then
-			vim.api.nvim_buf_delete(output_buffer, { force = true })
-			output_buffer = -1
-		end
+	if output_window == nil or not vim.api.nvim_win_is_valid(output_window) then
+		vim.cmd("topleft 7split")
+		output_window = vim.api.nvim_get_current_win()
 	end
-
-	if output_buffer ~= -1 then
-		if vim.api.nvim_buf_is_valid(output_buffer) then
-			vim.bo[output_buffer].bufhidden = "wipe"
-			vim.bo[output_buffer].buftype = "nofile"
-			vim.bo[output_buffer].swapfile = false
-			vim.bo[output_buffer].buflisted = false
-			vim.bo[output_buffer].modifiable = true
-			vim.api.nvim_buf_set_lines(output_buffer, 0, -1, false, {})
-		end
-		return
-	end
-
-	output_buffer = vim.api.nvim_create_buf(false, false)
-
-	vim.bo[output_buffer].bufhidden = "wipe"
-	vim.bo[output_buffer].buftype = "nofile"
-	vim.bo[output_buffer].swapfile = false
-	vim.bo[output_buffer].buflisted = false
-	vim.bo[output_buffer].modifiable = true
-
-	vim.cmd("topleft 7split")
-	output_window = vim.api.nvim_get_current_win()
-	vim.api.nvim_buf_set_name(output_buffer, "Program Output")
+	vim.api.nvim_set_current_win(output_window)
+	output_buffer = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(output_window, output_buffer)
-	vim.wo[output_window].winfixheight = true
+	if command then
+		vim.fn.termopen(command, {
+			on_exit = on_exit,
+			on_stdout = on_out,
+			on_stderr = on_out,
+		})
+	end
+	vim.api.nvim_buf_set_name(output_buffer, "Program Output")
+	vim.api.nvim_win_set_cursor(output_window, { vim.api.nvim_buf_line_count(output_buffer), 0 })
+
+	if vim.fn.bufnr("Program Last Output") ~= -1 then
+		vim.api.nvim_buf_delete(vim.fn.bufnr("Program Last Output"), { force = true })
+	end
 	vim.fn.win_gotoid(prev)
 end
 
@@ -135,10 +132,18 @@ local function close_output()
 	output_buffer = nil
 end
 
-local function set_status_contents(text)
+local function set_status_contents(text, ignore_timer)
 	if not status_buffer then
 		return
 	end
+
+	vim.api.nvim_buf_set_option(status_buffer, "modifiable", true)
+	vim.api.nvim_buf_set_lines(status_buffer, 0, -1, false, { text })
+	vim.api.nvim_buf_set_option(status_buffer, "modifiable", false)
+	if ignore_timer then
+		return
+	end
+
 	local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
 	local i, elapsed = 1, 0
 
@@ -181,8 +186,8 @@ local function run_job(cmd, on_exit, on_stderr)
 	end
 
 	current_job = vim.fn.jobstart(cmd, {
-		stdout_buffered = true,
-		stderr_buffered = true,
+		stdout_buffered = false,
+		stderr_buffered = false,
 		on_stdout = function(_, data)
 			if on_stderr then
 				for _, line in ipairs(data) do
@@ -398,9 +403,10 @@ function M.build(f)
 						"./compile_commands.json"
 					)
 
-					close_status(1000)
 					if f then
 						f(code == 0)
+					else
+						close_status(1000)
 					end
 				end)
 			end,
@@ -423,85 +429,16 @@ function M.run()
 		M.select_launch_target()
 	end
 
-	-- open_status()
-
-	if output_buffer and vim.api.nvim_buf_is_valid(output_buffer) then
-		vim.api.nvim_buf_set_lines(output_buffer, 0, -1, false, {})
-	end
-	-- set_status_contents("Running")
-
-	local handle
-	local stdout = vim.loop.new_pipe(false)
-	local stderr = vim.loop.new_pipe(false)
-
-	handle = vim.loop.spawn("./" .. settings["launchTarget"], {
-		cwd = "./build/" .. settings["buildType"],
-		args = {},
-		stdio = { nil, stdout, stderr },
-	}, function(code, signal)
-		stdout:close()
-		stderr:close()
-		handle:close()
-
-		vim.schedule(function()
-			if
-				output_buffer
-				and vim.api.nvim_buf_is_valid(output_buffer)
-				and vim.api.nvim_buf_line_count(output_buffer) == 1
-				and vim.api.nvim_buf_get_lines(output_buffer, 0, 1, false)[1] == ""
-			then
-				close_output()
-			end
-		end)
+	open_status()
+	set_status_contents("Running")
+	open_output({
+		"bash",
+		"-c",
+		"cd ./build/" .. settings.buildType .. " && ./" .. settings.launchTarget,
+	}, function(job_id, exit_code, event)
 		close_status(1000)
-	end)
-	if not handle then
-		close_status(0)
-	end
-
-	stdout:read_start(function(err, data)
-		if not data then
-			return
-		end
-
-		vim.schedule(function()
-			if not output_buffer or not vim.api.nvim_buf_is_valid(output_buffer) then
-				open_output()
-			end
-		end)
-
-		for line in data:gmatch("[^\r\n]+") do
-			vim.schedule(function()
-				local line_count = vim.api.nvim_buf_line_count(output_buffer)
-				if line_count == 1 and vim.api.nvim_buf_get_lines(output_buffer, 0, 1, false)[1] == "" then
-					vim.api.nvim_buf_set_lines(output_buffer, 0, -1, false, { line })
-				else
-					vim.api.nvim_buf_set_lines(output_buffer, -1, -1, false, { line })
-				end
-			end)
-		end
-	end)
-
-	stderr:read_start(function(err, data)
-		if not data then
-			return
-		end
-
-		vim.schedule(function()
-			if not output_buffer or not vim.api.nvim_buf_is_valid(output_buffer) then
-				open_output()
-			end
-		end)
-
-		for line in data:gmatch("[^\r\n]+") do
-			vim.schedule(function()
-				local line_count = vim.api.nvim_buf_line_count(output_buffer)
-				if line_count == 1 and vim.api.nvim_buf_get_lines(output_buffer, 0, 1, false)[1] == "" then
-					vim.api.nvim_buf_set_lines(output_buffer, 0, -1, false, { line })
-				else
-					vim.api.nvim_buf_set_lines(output_buffer, -1, -1, false, { line })
-				end
-			end)
+		if not settings.show_output then
+			close_output()
 		end
 	end)
 end
@@ -511,7 +448,6 @@ function M.build_and_run()
 		if success then
 			M.run()
 		end
-		close_status(1000)
 	end)
 end
 
@@ -573,6 +509,18 @@ function M.debug()
 	end)
 end
 
+function M.toggle_show_output()
+	load_settings()
+	settings.show_output = not settings.show_output
+	save_settings()
+
+	open_status()
+	set_status_contents("Show output=" .. (settings.show_output and "true" or "false"), true)
+	close_status(1000)
+	if not settings.show_output then
+		close_output()
+	end
+end
 vim.api.nvim_create_autocmd("BufWritePost", {
 	pattern = "CMakeLists.txt",
 	callback = function()
@@ -581,8 +529,23 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 		end, true)
 	end,
 })
-
--- vim.keymap.set("n", "<F7>", M.build_and_run, { desc = "Build CMake" })
+vim.api.nvim_create_autocmd("SourcePost", {
+	callback = function(args)
+		output_buffer = vim.fn.bufnr("Program Output")
+		if output_buffer ~= -1 then
+			local windows = vim.tbl_filter(function(win)
+				return vim.api.nvim_win_get_buf(win) == output_buffer
+			end, vim.api.nvim_list_wins())
+			if #windows > 0 then
+				output_window = windows[1]
+				vim.api.nvim_buf_delete(output_buffer, { force = true })
+				output_buffer = nil
+			end
+		end
+		close_output()
+	end,
+})
+-- vim.keymap.set("n", "<leader>t", M.toggle_show_output, { desc = "Toggle show CMake run output" })
 -- vim.keymap.set("n", "<F8>", M.select_build_target, { desc = "Get CMake Build Targets" })
 -- vim.keymap.set("n", "<F9>", M.select_launch_target, { desc = "Get CMake Build Targets" })
 -- vim.keymap.set("n", "<F10>", M.select_build_type, { desc = "Get CMake Build Targets" })

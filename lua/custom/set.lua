@@ -2,6 +2,11 @@ vim.opt.nu = true
 vim.opt.relativenumber = true
 vim.opt.clipboard = unnamedplus
 
+vim.opt.foldenable = true
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldlevel = 99
+
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 vim.opt.shiftwidth = 4
@@ -31,10 +36,22 @@ vim.o.autoread = true
 vim.g.dotnet_errors_only = true
 vim.g.dotnet_show_project_file = false
 
+vim.diagnostic.config({
+	virtual_text = false,
+	signs = {
+		text = {
+			[vim.diagnostic.severity.ERROR] = " •",
+			[vim.diagnostic.severity.WARN] = " •",
+			[vim.diagnostic.severity.INFO] = " •",
+			[vim.diagnostic.severity.HINT] = " •",
+		},
+	},
+})
+
 if vim.g.neovide then
-	vim.api.nvim_set_hl(0, "Normal", { bg = "#202020" })
+	-- vim.api.nvim_set_hl(0, "Normal", { bg = "#202020" })
 	vim.o.guifont = "JetBrainsMono Nerd Font Mono:h14"
-	vim.g.neovide_opacity = 0.9
+	-- vim.g.neovide_opacity = 0.9
 	vim.g.neovide_cursor_animation_length = 0.07
 	vim.g.neovide_cursor_trail_size = 0
 	vim.g.neovide_cursor_animate_in_insert_mode = false
@@ -44,4 +61,5 @@ if vim.g.neovide then
 	vim.g.neovide_scroll_animation_length = 0.1
 	vim.g.neovide_scroll_animation_far_lines = 0.1
 	vim.g.neovide_frameless = true
+	vim.g.neovide_progress_bar_enabled = false
 end

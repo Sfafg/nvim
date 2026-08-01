@@ -33,6 +33,7 @@ return {
 				css = { "prettier" },
 				markdown = { "prettier" },
 				glsl = { "clang_format" },
+				qml = { "qmlformat" },
 			},
 		})
 
@@ -53,6 +54,7 @@ return {
 				"*.h",
 				"*.hpp",
 				"*.js",
+				"*.qml",
 			},
 			callback = function(args)
 				require("conform").format()

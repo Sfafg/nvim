@@ -114,6 +114,13 @@ local function load_keymaps()
 		end
 	end, { desc = "Jump to Profile.cs" })
 
+	vim.keymap.set("n", "<leader>t", function()
+		local type = M.get_project_type()
+		if type == "cmake" then
+			require("plugins.cmake-custom").toggle_show_output()
+		end
+	end, { desc = "Toggle show CMake run output" })
+
 	vim.keymap.set("n", "<leader>jp", function()
 		local type = M.get_project_type()
 		if type == "dotnet" then
@@ -534,6 +541,10 @@ vim.keymap.set("n", "<F5>", project_build_and_run, { desc = "Build and Run proje
 vim.keymap.set("n", "<F2>", project_f2, { desc = "Select Build Type" })
 vim.keymap.set("n", "<F3>", project_f3, { desc = "Select Launch Target" })
 vim.keymap.set("n", "<F4>", project_f4, { desc = "Select Build Target" })
+
+vim.api.nvim_create_user_command("ProjectBuildAndRun", function()
+	project_build_and_run()
+end, {})
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
 	callback = function()

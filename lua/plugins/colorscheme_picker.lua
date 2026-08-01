@@ -87,8 +87,8 @@ local function color_picker()
 			}),
 			layout_config = {
 				anchor = "NE",
-				width = 0.1,
-				height = 0.3,
+				width = 30,
+				height = 25,
 				preview_width = 1,
 			},
 		})
@@ -106,7 +106,7 @@ vim.api.nvim_create_user_command("ColorschemeOpacity", function(opts)
 end, { nargs = 1 })
 
 function M.setup()
-    M.load_colorscheme()
-    M.load_opacity()
-end 
+	M.load_colorscheme()
+	M.load_opacity()
+end
 return M
