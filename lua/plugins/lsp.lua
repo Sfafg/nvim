@@ -65,6 +65,19 @@ return {
 				vim.lsp.config(lsp, opts)
 				vim.lsp.enable(lsp)
 			end
+			require("lspconfig").arduino_language_server.setup({
+				cmd = {
+					"arduino-language-server",
+					"-cli",
+					"arduino-cli",
+					"-cli-config",
+					vim.fn.expand("~/.arduino15/arduino-cli.yaml"),
+					"-fqbn",
+					"adafruit:nrf52:feather52840",
+					"-clangd",
+					"clangd",
+				},
+			})
 		end,
 	},
 }

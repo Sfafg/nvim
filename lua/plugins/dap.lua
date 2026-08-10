@@ -84,6 +84,22 @@ return {
 			args = { "--quiet", "--interpreter=dap" },
 		}
 
+		dap.configurations.cpp = {
+			{
+				name = "Launch current file",
+				type = "gdb",
+				request = "launch",
+				program = function()
+					local file = vim.fn.expand("%:r")
+					return file
+				end,
+				cwd = "${workspaceFolder}",
+				stopOnEntry = false,
+				args = {},
+				runInTerminal = false,
+			},
+		}
+
 		local dapui = require("dapui")
 		dapui.setup()
 		dap.listeners.before.attach.dapui_config = function()

@@ -43,7 +43,7 @@ local function load_keymaps()
 	vim.keymap.set("n", "<leader>jj", function()
 		local type = M.get_project_type()
 
-		if type == "cmake" then
+		if type == "cmake" or type == nil then
 			jumper.jump_to_alternative_function(function(buff_name)
 				local name = vim.fn.fnamemodify(buff_name, ":r")
 				local extension = vim.fn.fnamemodify(buff_name, ":e")
