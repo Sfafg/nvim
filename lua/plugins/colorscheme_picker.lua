@@ -43,7 +43,7 @@ function M.load_opacity()
 	end
 	local data = f:read("*a")
 	f:close()
-	set_opacity(data)
+	set_opacity(tonumber(data))
 end
 
 local function color_picker()

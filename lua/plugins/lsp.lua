@@ -65,7 +65,7 @@ return {
 				vim.lsp.config(lsp, opts)
 				vim.lsp.enable(lsp)
 			end
-			require("lspconfig").arduino_language_server.setup({
+			vim.lsp.config("arduino_language_server", {
 				cmd = {
 					"arduino-language-server",
 					"-cli",
@@ -78,6 +78,8 @@ return {
 					"clangd",
 				},
 			})
+
+			vim.lsp.enable("arduino_language_server")
 		end,
 	},
 }

@@ -34,6 +34,10 @@ function M.get_project_type()
 		return "lua"
 	end
 
+	if vim.fn.globpath(dir, "*.ino") ~= "" then
+		return "arduino"
+	end
+
 	return nil
 end
 
@@ -43,7 +47,7 @@ local function load_keymaps()
 	vim.keymap.set("n", "<leader>jj", function()
 		local type = M.get_project_type()
 
-		if type == "cmake" or type == nil then
+		if type == "cmake" or type == "arduino" or type == nil then
 			jumper.jump_to_alternative_function(function(buff_name)
 				local name = vim.fn.fnamemodify(buff_name, ":r")
 				local extension = vim.fn.fnamemodify(buff_name, ":e")
@@ -272,7 +276,7 @@ local function open_project(project)
 			vim.api.nvim_buf_delete(buf, { force = true })
 		end
 	end
-	-- vim.cmd("silent! bufdo bwipeout!")
+	vim.cmd("silent! bufdo bwipeout!")
 	vim.api.nvim_set_current_dir(project)
 	if vim.fn.filereadable(session) == 1 then
 		vim.cmd("silent! source " .. session)
@@ -461,6 +465,8 @@ local function project_build()
 		end
 	elseif type == "lua" then
 		vim.cmd("so")
+	elseif type == "arduino" then
+		vim.cmd("!arduino-cli compile --fqbn adafruit:nrf52:feather52840 .")
 	end
 	return true
 end
@@ -486,6 +492,8 @@ local function project_run()
 		})
 	elseif type == "lua" then
 		vim.cmd("so")
+	elseif type == "arduino" then
+		vim.cmd("!arduino-cli upload -p /dev/ttyACM0 --fqbn adafruit:nrf52:feather52840 . ")
 	end
 end
 

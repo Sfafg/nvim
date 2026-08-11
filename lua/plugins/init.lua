@@ -1,7 +1,7 @@
 local plugins = {}
 require("plugins.sticky_notes")
 require("plugins.file_jumper")
-require("plugins.colorscheme_picker")
+require("plugins.colorscheme_picker").setup()
 table.insert(plugins, require("plugins.dap"))
 -- table.insert(plugins, require("plugins.buffer-close"))
 table.insert(plugins, require("plugins.luasnip"))
