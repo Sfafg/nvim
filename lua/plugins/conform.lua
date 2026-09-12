@@ -16,6 +16,7 @@ return {
 			},
 			formatters_by_ft = {
 				lua = { "stylua" },
+				rust = { "rustfmt" },
 				cpp = { "clang_format" },
 				c = { "clang_format" },
 				cs = { "csharpier" },
@@ -55,6 +56,7 @@ return {
 				"*.hpp",
 				"*.js",
 				"*.qml",
+				"*.rs",
 			},
 			callback = function(args)
 				require("conform").format()

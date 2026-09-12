@@ -18,6 +18,10 @@ function M.get_project_type()
 		return "cmake"
 	end
 
+	if vim.fn.filereadable(dir .. "/Cargo.toml") == 1 then
+		return "rust"
+	end
+
 	if vim.fn.globpath(dir, "*.tex") ~= "" then
 		return "latex"
 	end
@@ -450,6 +454,8 @@ local function project_build()
 	local type = M.get_project_type()
 	if type == "cmake" then
 		require("plugins.cmake-custom").build()
+	elseif type == "rust" then
+		vim.cmd("!cargo build")
 	elseif type == "conan" then
 		vim.cmd("!conan build --settings=build_type=Debug")
 	elseif type == "latex" then
@@ -476,6 +482,8 @@ local function project_run()
 	local type = M.get_project_type()
 	if type == "cmake" then
 		require("plugins.cmake-custom").run()
+	elseif type == "rust" then
+		vim.cmd("!cargo run")
 	elseif type == "conan" then
 		vim.cmd("!build/Debug/generators/main/kod-craft-2")
 	elseif type == "dotnet" then
@@ -501,6 +509,8 @@ local function project_build_and_run()
 	local type = M.get_project_type()
 	if type == "cmake" then
 		require("plugins.cmake-custom").build_and_run()
+	elseif type == "rust" then
+		project_run()
 	else
 		if project_build() then
 			project_run()
@@ -552,6 +562,10 @@ vim.keymap.set("n", "<F4>", project_f4, { desc = "Select Build Target" })
 
 vim.api.nvim_create_user_command("ProjectBuildAndRun", function()
 	project_build_and_run()
+end, {})
+
+vim.api.nvim_create_user_command("ProjectGetType", function()
+	print(M.get_project_type())
 end, {})
 
 vim.api.nvim_create_autocmd("VimLeavePre", {

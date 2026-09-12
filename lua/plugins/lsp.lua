@@ -34,7 +34,7 @@ return {
 			vim.keymap.del("n", "grn")
 
 			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-			local servers = { "omnisharp", "clangd", "lua_ls", "pylsp", "texlab", "ts_ls" }
+			local servers = { "omnisharp", "clangd", "lua_ls", "pylsp", "texlab", "ts_ls", "rust_analyzer" }
 			for _, lsp in ipairs(servers) do
 				local opts = {
 					on_attach = on_attach,
