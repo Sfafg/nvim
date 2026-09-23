@@ -24,7 +24,9 @@ return {
 				vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
 				vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
 				vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references, { desc = "LSP References" })
-				vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Hover Documentation" })
+				vim.keymap.set("n", "K", function()
+					vim.lsp.buf.hover({ border = "double" })
+				end, { desc = "Hover Documentation" })
 			end
 			vim.keymap.del("n", "grt")
 			vim.keymap.del("n", "gri")

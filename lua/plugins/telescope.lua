@@ -25,6 +25,7 @@ return {
 					"node_modules",
 					"%.git/",
 					".build/",
+					"%build/",
 					"%.lock",
 					"%.jpg",
 					"%.png",
