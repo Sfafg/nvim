@@ -1,3 +1,13 @@
+vim.lsp.codelens.enable(true)
+vim.lsp.start({
+	name = "html",
+	cmd = "…",
+	on_attach = function(client)
+		vim.lsp.linked_editing_range.enable(true, { client_id = client.id })
+	end,
+})
+vim.lsp.inlay_hint.enable(true)
+
 vim.opt.nu = true
 vim.opt.relativenumber = true
 vim.opt.clipboard = unnamedplus

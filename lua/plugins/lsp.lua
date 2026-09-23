@@ -1,87 +1,78 @@
 return {
-	{
-		"neovim/nvim-lspconfig",
-		dependencies = {
-			"williamboman/mason.nvim",
-			"williamboman/mason-lspconfig.nvim",
-			"hrsh7th/nvim-cmp",
-			"L3MON4D3/LuaSnip",
-			"saadparwaiz1/cmp_luasnip",
-			"hrsh7th/cmp-nvim-lsp",
-			"nvim-telescope/telescope.nvim",
+	"neovim/nvim-lspconfig",
+	dependencies = {
+		"mason-org/mason.nvim",
+		"mason-org/mason-lspconfig.nvim",
+		{
+			"saghen/blink.cmp",
+			dependencies = {
+				"saghen/blink.lib",
+				"L3MON4D3/LuaSnip",
+				"rafamadriz/friendly-snippets",
+			},
+			build = function()
+				require("blink.cmp").build():pwait()
+			end,
 		},
-		opts = { inlay_hints = { enabled = true } },
-		config = function()
-			require("mason-lspconfig").setup({
-				ensure_installed = { "lua_ls", "clangd", "pylsp", "texlab", "ts_ls" },
-				automatic_installation = true,
-			})
-
-			local on_attach = function(_, _)
-				vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
-				vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
-				vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, { desc = "Go to Type Definition" })
-				vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
-				vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
-				vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references, { desc = "LSP References" })
-				vim.keymap.set("n", "K", function()
-					vim.lsp.buf.hover({ border = "double" })
-				end, { desc = "Hover Documentation" })
-			end
-			vim.keymap.del("n", "grt")
-			vim.keymap.del("n", "gri")
-			vim.keymap.del("n", "grr")
-			vim.keymap.del("n", "grx")
-			vim.keymap.del("n", "gra")
-			vim.keymap.del("n", "grn")
-
-			local capabilities = require("cmp_nvim_lsp").default_capabilities()
-			local servers = { "omnisharp", "clangd", "lua_ls", "pylsp", "texlab", "ts_ls", "rust_analyzer" }
-			for _, lsp in ipairs(servers) do
-				local opts = {
-					on_attach = on_attach,
-					capabilities = capabilities,
-				}
-
-				if lsp == "clangd" then
-					opts.cmd = {
-						"clangd",
-						"--all-scopes-completion",
-						"--completion-style=detailed",
-					}
-				end
-
-				if lsp == "lua_ls" then
-					opts.settings = {
-						Lua = {
-							diagnostics = {
-								globals = { "vim" },
-							},
-							workspace = {
-								library = vim.api.nvim_get_runtime_file("", true),
-							},
-						},
-					}
-				end
-
-				vim.lsp.config(lsp, opts)
-				vim.lsp.enable(lsp)
-			end
-			vim.lsp.config("arduino_language_server", {
-				cmd = {
-					"arduino-language-server",
-					"-cli",
-					"arduino-cli",
-					"-cli-config",
-					vim.fn.expand("~/.arduino15/arduino-cli.yaml"),
-					"-fqbn",
-					"adafruit:nrf52:feather52840",
-					"-clangd",
-					"clangd",
-				},
-			})
-
-			vim.lsp.enable("arduino_language_server")
-		end,
 	},
+
+	config = function()
+		require("mason").setup()
+		require("mason-lspconfig").setup({
+			ensure_installed = { "lua_ls", "clangd", "pylsp", "texlab", "ts_ls" },
+			automatic_installation = true,
+		})
+
+		local on_attach = function(_, _)
+			vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
+			vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code Action" })
+			vim.keymap.set("n", "gt", vim.lsp.buf.type_definition, { desc = "Go to Type Definition" })
+			vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to Definition" })
+			vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to Implementation" })
+			vim.keymap.set("n", "gr", require("telescope.builtin").lsp_references, { desc = "LSP References" })
+			vim.keymap.set("n", "K", function()
+				vim.lsp.buf.hover({ border = "double" })
+			end, { desc = "Hover Documentation" })
+		end
+
+		vim.keymap.del("n", "grt")
+		vim.keymap.del("n", "gri")
+		vim.keymap.del("n", "grr")
+		vim.keymap.del("n", "grx")
+		vim.keymap.del("n", "gra")
+		vim.keymap.del("n", "grn")
+
+		vim.lsp.config("lua_ls", {
+			settings = {
+				Lua = {
+					diagnostics = {
+						globals = { "vim" },
+					},
+					workspace = {
+						library = vim.api.nvim_get_runtime_file("", true),
+					},
+				},
+			},
+			on_attach = on_attach,
+		})
+		vim.lsp.config("clangd", {
+			cmd = {
+				"clangd",
+				"--all-scopes-completion",
+				"--completion-style=detailed",
+			},
+			on_attach = on_attach,
+		})
+
+		require("luasnip.loaders.from_vscode").lazy_load()
+		require("blink.cmp").setup({
+			signature = { enabled = true },
+			keymap = { preset = "enter" },
+			completion = {
+				ghost_text = {
+					enabled = true,
+				},
+			},
+		})
+	end,
 }
