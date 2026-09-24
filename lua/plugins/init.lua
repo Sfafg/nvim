@@ -37,5 +37,9 @@ table.insert(plugins, require("plugins.git-blame"))
 require("plugins.cmake-custom")
 table.insert(plugins, require("plugins.tiny-inline-diagnostics"))
 table.insert(plugins, require("plugins.lsp"))
+-- table.insert(plugins, require("plugins.lightbulb"))
+table.insert(plugins, require("plugins.image"))
 table.insert(plugins, require("plugins.brainrot"))
+table.insert(plugins, require("plugins.playerone"))
+
 return plugins

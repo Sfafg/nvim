@@ -89,7 +89,7 @@ function M.jump_to_alternative(pattern, replacement)
 	local dir = vim.loop.cwd()
 	local buff_name = vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
 	if buff_name == "" then
-		return
+		return false
 	end
 
 	buff_name = vim.fn.fnamemodify(buff_name, ":t")
@@ -107,9 +107,150 @@ function M.jump_to_alternative(pattern, replacement)
 
 	if jump_file ~= "" then
 		vim.cmd("silent! edit " .. jump_file)
+		return true
 	else
-		print(file_name .. " not found")
+		return false
 	end
+end
+function M.jump_based_on_extension(config)
+	local current = vim.api.nvim_buf_get_name(0)
+
+	if current == "" then
+		vim.notify("Current buffer has no file name", vim.log.levels.WARN)
+		return
+	end
+
+	local filename = vim.fs.basename(current)
+	local dir = vim.fs.dirname(current)
+
+	local stem, ext = filename:match("^(.*)%.([^%.]+)$")
+
+	if not stem or not ext then
+		vim.notify("Could not determine file extension", vim.log.levels.WARN)
+		return
+	end
+
+	-- Find the extension group.
+	local group
+
+	for _, extensions in ipairs(config.extensions) do
+		for _, candidate in ipairs(extensions) do
+			if candidate == ext then
+				group = extensions
+				break
+			end
+		end
+
+		if group then
+			break
+		end
+	end
+
+	if not group then
+		vim.notify("No related extensions configured for ." .. ext, vim.log.levels.WARN)
+		return
+	end
+
+	-- Preferred extensions for the current extension.
+	local targets = config.targets[ext] or {}
+
+	-- If no explicit targets were configured, use the rest of the group.
+	if #targets == 0 then
+		for _, candidate in ipairs(group) do
+			if candidate ~= ext then
+				table.insert(targets, candidate)
+			end
+		end
+	end
+
+	---------------------------------------------------------------------------
+	-- Search.
+	--
+	-- IMPORTANT:
+	-- Directory proximity takes priority over extension preference.
+	--
+	-- current directory:
+	--   foo.h
+	--   foo.hpp
+	--   foo.c
+	--
+	-- then parent directory:
+	--   foo.h
+	--   foo.hpp
+	--   foo.c
+	--
+	---------------------------------------------------------------------------
+
+	local search_dir = dir
+
+	while search_dir do
+		for _, target_ext in ipairs(targets) do
+			local candidate = vim.fs.joinpath(search_dir, stem .. "." .. target_ext)
+
+			if vim.uv.fs_stat(candidate) then
+				vim.cmd.edit(vim.fn.fnameescape(candidate))
+				return
+			end
+		end
+
+		local parent = vim.fs.dirname(search_dir)
+
+		if parent == search_dir then
+			break
+		end
+
+		search_dir = parent
+	end
+
+	---------------------------------------------------------------------------
+	-- Nothing found.
+	---------------------------------------------------------------------------
+
+	local target_ext = targets[1]
+
+	if not target_ext then
+		vim.notify("No target extension configured", vim.log.levels.WARN)
+		return
+	end
+
+	local default_path = vim.fs.joinpath(dir, stem .. "." .. target_ext)
+
+	vim.ui.input({
+		prompt = "Create related file: ",
+		default = default_path,
+	}, function(path)
+		if not path or path == "" then
+			return
+		end
+
+		path = vim.fn.expand(path)
+
+		local parent = vim.fs.dirname(path)
+
+		if not vim.uv.fs_stat(parent) then
+			vim.fn.mkdir(parent, "p")
+		end
+
+		local new_ext = path:match("%.([^%.]+)$")
+
+		local contents = ""
+
+		if config.defaults[new_ext] then
+			contents = config.defaults[new_ext](filename)
+		end
+
+		local file = io.open(path, "w")
+
+		if not file then
+			vim.notify("Could not create file: " .. path, vim.log.levels.ERROR)
+			return
+		end
+
+		file:write(contents)
+		file:close()
+
+		vim.cmd.edit(vim.fn.fnameescape(path))
+	end)
 end
 
 function M.jump_to_alternative_match(pattern)
@@ -231,69 +372,115 @@ local function show_jump_list()
 		:find()
 end
 
-vim.keymap.set("n", "<leader>jl", function()
+vim.keymap.set("n", "<leader>jj", function()
+	M.jump_based_on_extension({
+		extensions = {
+			{ "c", "cpp", "h", "hpp" },
+			{ "frag", "vert" },
+		},
+
+		targets = {
+			c = { "h", "hpp", "cpp" },
+			cpp = { "h", "hpp", "c" },
+
+			h = { "cpp", "c" },
+			hpp = { "cpp", "c" },
+
+			frag = { "vert" },
+			vert = { "frag" },
+		},
+
+		defaults = {
+			h = function()
+				return "#pragma once\n"
+			end,
+
+			hpp = function()
+				return "#pragma once\n"
+			end,
+
+			c = function(original_file)
+				return '#include "' .. original_file .. '"\n'
+			end,
+
+			cpp = function(original_file)
+				return '#include "' .. original_file .. '"\n'
+			end,
+
+			frag = function()
+				return ""
+			end,
+
+			vert = function()
+				return ""
+			end,
+		},
+	})
+end, { desc = "Jump based on extension" })
+
+vim.keymap.set("n", "<leader>lj", function()
 	show_jump_list()
 end, { desc = "Show Jump List" })
 
-vim.keymap.set("n", "<leader>j1", function()
+vim.keymap.set("n", "<leader>1", function()
 	jump_to_index(1)
 end, { desc = "Jump list at index 1" })
-vim.keymap.set("n", "<leader>j2", function()
+vim.keymap.set("n", "<leader>2", function()
 	jump_to_index(2)
 end, { desc = "Jump list at index 2" })
-vim.keymap.set("n", "<leader>j3", function()
+vim.keymap.set("n", "<leader>3", function()
 	jump_to_index(3)
 end, { desc = "Jump list at index 3" })
-vim.keymap.set("n", "<leader>j4", function()
+vim.keymap.set("n", "<leader>4", function()
 	jump_to_index(4)
 end, { desc = "Jump list at index 4" })
-vim.keymap.set("n", "<leader>j5", function()
+vim.keymap.set("n", "<leader>5", function()
 	jump_to_index(5)
 end, { desc = "Jump list at index 5" })
-vim.keymap.set("n", "<leader>j6", function()
+vim.keymap.set("n", "<leader>6", function()
 	jump_to_index(6)
 end, { desc = "Jump list at index 6" })
-vim.keymap.set("n", "<leader>j7", function()
+vim.keymap.set("n", "<leader>7", function()
 	jump_to_index(7)
 end, { desc = "Jump list at index 7" })
-vim.keymap.set("n", "<leader>j8", function()
+vim.keymap.set("n", "<leader>8", function()
 	jump_to_index(8)
 end, { desc = "Jump list at index 8" })
-vim.keymap.set("n", "<leader>j9", function()
+vim.keymap.set("n", "<leader>9", function()
 	jump_to_index(9)
 end, { desc = "Jump list at index 9" })
-vim.keymap.set("n", "<leader>j0", function()
+vim.keymap.set("n", "<leader>0", function()
 	jump_to_index(10)
 end, { desc = "Jump list at index 10" })
 
-vim.keymap.set("n", "<leader>js1", function()
+vim.keymap.set("n", "<leader>s1", function()
 	set_jump_to_file_at_index(1)
 end, { desc = "Jump list at index 1" })
-vim.keymap.set("n", "<leader>js2", function()
+vim.keymap.set("n", "<leader>s2", function()
 	set_jump_to_file_at_index(2)
 end, { desc = "Jump list at index 2" })
-vim.keymap.set("n", "<leader>js3", function()
+vim.keymap.set("n", "<leader>s3", function()
 	set_jump_to_file_at_index(3)
 end, { desc = "Jump list at index 3" })
-vim.keymap.set("n", "<leader>js4", function()
+vim.keymap.set("n", "<leader>s4", function()
 	set_jump_to_file_at_index(4)
 end, { desc = "Jump list at index 4" })
-vim.keymap.set("n", "<leader>js5", function()
+vim.keymap.set("n", "<leader>s5", function()
 	set_jump_to_file_at_index(5)
 end, { desc = "Jump list at index 5" })
-vim.keymap.set("n", "<leader>js6", function()
+vim.keymap.set("n", "<leader>s6", function()
 	set_jump_to_file_at_index(6)
 end, { desc = "Jump list at index 6" })
-vim.keymap.set("n", "<leader>js7", function()
+vim.keymap.set("n", "<leader>s7", function()
 	set_jump_to_file_at_index(7)
 end, { desc = "Jump list at index 7" })
-vim.keymap.set("n", "<leader>js8", function()
+vim.keymap.set("n", "<leader>s8", function()
 	set_jump_to_file_at_index(8)
 end, { desc = "Jump list at index 8" })
-vim.keymap.set("n", "<leader>js9", function()
+vim.keymap.set("n", "<leader>s9", function()
 	set_jump_to_file_at_index(9)
 end, { desc = "Jump list at index 9" })
-vim.keymap.set("n", "<leader>js0", function()
+vim.keymap.set("n", "<leader>s0", function()
 	set_jump_to_file_at_index(10)
 end, { desc = "Jump list at index 10" })
 
